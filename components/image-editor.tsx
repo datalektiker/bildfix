@@ -27,13 +27,25 @@ export function ImageEditor() {
   const [customWidth, setCustomWidth] = useState<number>(0);
   const [customHeight, setCustomHeight] = useState<number>(0);
   const [activeTab, setActiveTab] = useState<string>("preset");
+  const [displayedSize, setDisplayedSize] = useState<{
+    width: number;
+    height: number;
+  } | null>(null);
 
   useEffect(() => {
     if (!uploadedFile) return;
 
+    const objectUrl = URL.createObjectURL(uploadedFile);
     const img = new Image();
     img.onload = () => {
       setImage(img);
+      console.log("Image loaded", {
+        width: img.width,
+        height: img.height,
+        naturalWidth: img.naturalWidth,
+        naturalHeight: img.naturalHeight,
+        src: img.src,
+      });
 
       const aspectRatio = ASPECT_RATIOS[aspect].value;
       if (img.width / img.height > aspectRatio) {
@@ -43,11 +55,18 @@ export function ImageEditor() {
         setCustomWidth(Math.round(img.width));
         setCustomHeight(Math.round(img.width / aspectRatio));
       }
-
-      URL.revokeObjectURL(img.src);
     };
-    img.src = URL.createObjectURL(uploadedFile);
+    img.src = objectUrl;
+
+    // Rensa blob-URL när komponenten unmountas eller när en ny fil laddas
+    return () => {
+      URL.revokeObjectURL(objectUrl);
+    };
   }, [uploadedFile, aspect]);
+
+  useEffect(() => {
+    console.log("ImageEditor state", { uploadedFile, image, crop });
+  }, [uploadedFile, image, crop]);
 
   const handleFileSelect = useCallback((file: File) => {
     setUploadedFile(file);
@@ -76,9 +95,17 @@ export function ImageEditor() {
     []
   );
 
+  const handleCropChange = useCallback(
+    (crop: PixelCrop, displayed: { width: number; height: number }) => {
+      setCrop(crop);
+      setDisplayedSize(displayed);
+    },
+    []
+  );
+
   const handleDownload = useCallback(
-    async (options: DownloadOptionsType) => {
-      if (!image || !crop) {
+    async (options: DownloadOptions) => {
+      if (!image || !crop || !displayedSize) {
         toast({
           title: "Fel",
           description: "Välj en bild och beskär den först",
@@ -90,15 +117,9 @@ export function ImageEditor() {
       setLoading(true);
 
       try {
-        // Räkna ut skalan mellan visad bild och originalbild
-        const displayedWidth = image.width;
-        const displayedHeight = image.height;
-        const naturalWidth = image.naturalWidth;
-        const naturalHeight = image.naturalHeight;
-        const scaleX = naturalWidth / displayedWidth;
-        const scaleY = naturalHeight / displayedHeight;
-
-        // Skala crop-koordinaterna
+        // Skala crop-koordinaterna till originalbildens koordinater
+        const scaleX = image.naturalWidth / displayedSize.width;
+        const scaleY = image.naturalHeight / displayedSize.height;
         const cropX = crop.x * scaleX;
         const cropY = crop.y * scaleY;
         const cropWidth = crop.width * scaleX;
@@ -167,7 +188,16 @@ export function ImageEditor() {
         setLoading(false);
       }
     },
-    [image, crop, activeTab, customWidth, customHeight, uploadedFile, toast]
+    [
+      image,
+      crop,
+      displayedSize,
+      activeTab,
+      customWidth,
+      customHeight,
+      uploadedFile,
+      toast,
+    ]
   );
 
   return (
@@ -186,7 +216,7 @@ export function ImageEditor() {
                 <CropTool
                   image={image}
                   aspect={aspect}
-                  onCropChange={setCrop}
+                  onCropChange={handleCropChange}
                   className="min-h-[300px] flex items-center justify-center"
                 />
               </CardContent>
@@ -235,7 +265,12 @@ export function ImageEditor() {
           </div>
 
           <div className="space-y-6">
-            <ImagePreview image={image} crop={crop} className="pb-4" />
+            <ImagePreview
+              image={image}
+              crop={crop}
+              displayedSize={displayedSize}
+              className="pb-4"
+            />
 
             <Separator />
 

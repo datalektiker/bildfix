@@ -1,7 +1,12 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import ReactCrop, { Crop, PixelCrop, centerCrop, makeAspectCrop } from "react-image-crop";
+import ReactCrop, {
+  Crop,
+  PixelCrop,
+  centerCrop,
+  makeAspectCrop,
+} from "react-image-crop";
 import "react-image-crop/dist/ReactCrop.css";
 import { cn } from "@/lib/utils";
 import { ASPECT_RATIOS } from "@/lib/constants";
@@ -9,7 +14,10 @@ import { ASPECT_RATIOS } from "@/lib/constants";
 interface CropToolProps {
   image: HTMLImageElement | null;
   aspect: string;
-  onCropChange: (crop: PixelCrop) => void;
+  onCropChange: (
+    crop: PixelCrop,
+    displayedSize: { width: number; height: number }
+  ) => void;
   cropConfig?: Partial<Crop>;
   className?: string;
 }
@@ -17,29 +25,29 @@ interface CropToolProps {
 function centerAspectCrop(
   mediaWidth: number,
   mediaHeight: number,
-  aspect: number,
+  aspect: number
 ): Crop {
   return centerCrop(
     makeAspectCrop(
       {
-        unit: '%',
+        unit: "%",
         width: 90,
       },
       aspect,
       mediaWidth,
-      mediaHeight,
+      mediaHeight
     ),
     mediaWidth,
-    mediaHeight,
-  )
+    mediaHeight
+  );
 }
 
-export function CropTool({ 
-  image, 
-  aspect, 
+export function CropTool({
+  image,
+  aspect,
   onCropChange,
   cropConfig = {},
-  className
+  className,
 }: CropToolProps) {
   const [crop, setCrop] = useState<Crop>();
   const [completedCrop, setCompletedCrop] = useState<PixelCrop>();
@@ -54,18 +62,21 @@ export function CropTool({
       setCrop(newCrop);
       setCompletedCrop({
         ...newCrop,
-        x: Math.round(newCrop.x * width / 100),
-        y: Math.round(newCrop.y * height / 100),
-        width: Math.round(newCrop.width * width / 100),
-        height: Math.round(newCrop.height * height / 100),
-        unit: 'px',
+        x: Math.round((newCrop.x * width) / 100),
+        y: Math.round((newCrop.y * height) / 100),
+        width: Math.round((newCrop.width * width) / 100),
+        height: Math.round((newCrop.height * height) / 100),
+        unit: "px",
       });
     }
   }, [aspect, image]);
 
   useEffect(() => {
-    if (completedCrop) {
-      onCropChange(completedCrop);
+    if (completedCrop && imgRef.current) {
+      onCropChange(completedCrop, {
+        width: imgRef.current.width,
+        height: imgRef.current.height,
+      });
     }
   }, [completedCrop, onCropChange]);
 
@@ -80,7 +91,7 @@ export function CropTool({
         aspect={ASPECT_RATIOS[aspect]?.value}
         minWidth={50}
         minHeight={50}
-        circularCrop={aspect === 'circle'}
+        circularCrop={aspect === "circle"}
         {...cropConfig}
       >
         <img
@@ -88,11 +99,11 @@ export function CropTool({
           alt="Crop preview"
           src={image.src}
           className="max-w-full"
-          style={{ maxHeight: '70vh' }}
+          style={{ maxHeight: "70vh" }}
           onLoad={(e) => {
             const target = e.currentTarget;
             imgRef.current = target;
-            
+
             // Set initial crop immediately after image loads
             const aspectValue = ASPECT_RATIOS[aspect]?.value || 1;
             const initialCrop = centerAspectCrop(
@@ -103,11 +114,11 @@ export function CropTool({
             setCrop(initialCrop);
             setCompletedCrop({
               ...initialCrop,
-              x: Math.round(initialCrop.x * target.width / 100),
-              y: Math.round(initialCrop.y * target.height / 100),
-              width: Math.round(initialCrop.width * target.width / 100),
-              height: Math.round(initialCrop.height * target.height / 100),
-              unit: 'px',
+              x: Math.round((initialCrop.x * target.width) / 100),
+              y: Math.round((initialCrop.y * target.height) / 100),
+              width: Math.round((initialCrop.width * target.width) / 100),
+              height: Math.round((initialCrop.height * target.height) / 100),
+              unit: "px",
             });
           }}
         />
