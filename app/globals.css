@@ -1,0 +1,83 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --foreground-rgb: 0, 0, 0;
+  --background-start-rgb: 214, 219, 220;
+  --background-end-rgb: 255, 255, 255;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --foreground-rgb: 255, 255, 255;
+    --background-start-rgb: 0, 0, 0;
+    --background-end-rgb: 0, 0, 0;
+  }
+}
+
+@layer base {
+  :root {
+    --background: 220 16% 96%;
+    --foreground: 220 16% 22%;
+    --card: 0 0% 100%;
+    --card-foreground: 220 16% 22%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 220 16% 22%;
+    --primary: 213 32% 52%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 222 16% 84%;
+    --secondary-foreground: 220 16% 22%;
+    --muted: 220 14% 88%;
+    --muted-foreground: 220 16% 45%;
+    --accent: 179 25% 65%;
+    --accent-foreground: 220 16% 22%;
+    --destructive: 354 42% 56%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 220 13% 91%;
+    --input: 220 13% 91%;
+    --ring: 213 32% 52%;
+    --chart-1: 213 32% 52%;
+    --chart-2: 193 43% 67%;
+    --chart-3: 179 25% 65%;
+    --chart-4: 354 42% 56%;
+    --chart-5: 92 28% 65%;
+    --radius: 0.5rem;
+  }
+
+  .dark {
+    --background: 220 16% 22%;
+    --foreground: 220 14% 88%;
+    --card: 220 16% 28%;
+    --card-foreground: 220 14% 88%;
+    --popover: 220 16% 28%;
+    --popover-foreground: 220 14% 88%;
+    --primary: 210 34% 63%;
+    --primary-foreground: 220 16% 22%;
+    --secondary: 222 16% 28%;
+    --secondary-foreground: 220 14% 88%;
+    --muted: 220 16% 36%;
+    --muted-foreground: 220 14% 64%;
+    --accent: 179 25% 65%;
+    --accent-foreground: 220 16% 22%;
+    --destructive: 354 42% 56%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 220 16% 28%;
+    --input: 220 16% 28%;
+    --ring: 210 34% 63%;
+    --chart-1: 210 34% 63%;
+    --chart-2: 193 43% 67%;
+    --chart-3: 179 25% 65%;
+    --chart-4: 354 42% 56%;
+    --chart-5: 92 28% 65%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}
