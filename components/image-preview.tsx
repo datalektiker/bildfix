@@ -22,11 +22,12 @@ export function ImagePreview({ image, crop, className }: ImagePreviewProps) {
 
     const canvas = canvasRef.current;
     const ctx = canvas.getContext("2d");
-    
+
     if (!ctx) {
       return;
     }
 
+    // Använd crop-koordinaterna direkt
     canvas.width = crop.width;
     canvas.height = crop.height;
 
@@ -44,9 +45,16 @@ export function ImagePreview({ image, crop, className }: ImagePreviewProps) {
   }, [image, crop]);
 
   if (!image || !crop) {
-    return <div className={cn("flex items-center justify-center min-h-[200px] bg-muted/30 rounded-lg", className)}>
-      <p className="text-muted-foreground">Förhandsgranskning visas här</p>
-    </div>;
+    return (
+      <div
+        className={cn(
+          "flex items-center justify-center min-h-[200px] bg-muted/30 rounded-lg",
+          className
+        )}
+      >
+        <p className="text-muted-foreground">Förhandsgranskning visas här</p>
+      </div>
+    );
   }
 
   return (
@@ -54,13 +62,13 @@ export function ImagePreview({ image, crop, className }: ImagePreviewProps) {
       <Label className="mb-2 block">Förhandsgranskning</Label>
       <Card>
         <CardContent className="p-4 flex justify-center">
-          <canvas 
-            ref={canvasRef} 
+          <canvas
+            ref={canvasRef}
             className="max-w-full max-h-[300px] object-contain"
           />
         </CardContent>
       </Card>
-      
+
       <div className="mt-2 text-xs text-muted-foreground text-center">
         {crop.width} × {crop.height} pixlar
       </div>

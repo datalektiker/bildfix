@@ -26,75 +26,19 @@ export function FileUpload({
   const onDrop = useCallback(
     async (acceptedFiles: File[]) => {
       if (acceptedFiles.length === 0) return;
-
       const file = acceptedFiles[0];
       setUploading(true);
-
       try {
-        // Kontrollera miljövariabler
-        const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME;
-        const uploadPreset = process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET;
-
-        if (!cloudName || !uploadPreset) {
-          throw new Error("Cloudinary-konfiguration saknas");
-        }
-
-        console.log("Laddar upp till Cloudinary...");
-        const formData = new FormData();
-        formData.append("file", file);
-        formData.append("upload_preset", uploadPreset);
-        formData.append(
-          "api_key",
-          process.env.NEXT_PUBLIC_CLOUDINARY_API_KEY || ""
-        );
-
-        const uploadUrl = `https://api.cloudinary.com/v1_1/${cloudName}/image/upload`;
-        console.log("Upload URL:", uploadUrl);
-
-        const response = await fetch(uploadUrl, {
-          method: "POST",
-          body: formData,
-          headers: {
-            "X-Requested-With": "XMLHttpRequest",
-          },
-        });
-
-        if (!response.ok) {
-          const errorData = await response.json().catch(() => null);
-          console.error("Cloudinary svar:", errorData);
-          throw new Error(
-            `Uppladdningen misslyckades: ${response.statusText}. ${
-              errorData?.error?.message || ""
-            }`
-          );
-        }
-
-        const data = await response.json();
-        console.log("Cloudinary svar:", data);
-
-        if (!data.secure_url) {
-          throw new Error("Ingen bild-URL returnerades från Cloudinary");
-        }
-
-        // Hämta den optimerade bilden
-        const imageResponse = await fetch(data.secure_url);
-        if (!imageResponse.ok) {
-          throw new Error("Kunde inte hämta den uppladdade bilden");
-        }
-
-        const blob = await imageResponse.blob();
-        const newFile = new File([blob], file.name, { type: blob.type });
-
-        onFileSelect(newFile);
-
+        // Använd filen direkt lokalt
+        onFileSelect(file);
         toast({
-          title: "Bild uppladdad",
+          title: "Bild vald",
           description: "Bilden är nu redo för redigering",
         });
       } catch (error) {
-        console.error("Fel vid uppladdning:", error);
+        console.error("Fel vid filval:", error);
         toast({
-          title: "Fel vid uppladdning",
+          title: "Fel vid filval",
           description:
             error instanceof Error ? error.message : "Ett oväntat fel uppstod",
           variant: "destructive",
@@ -143,7 +87,7 @@ export function FileUpload({
             </div>
             <div>
               <p className="text-lg font-medium">
-                {uploading ? "Laddar upp..." : "Dra och släpp din bild här"}
+                {uploading ? "Bearbetar..." : "Dra och släpp din bild här"}
               </p>
               <p className="text-sm text-muted-foreground mt-1">
                 eller klicka för att bläddra (PNG, JPG, WebP)
