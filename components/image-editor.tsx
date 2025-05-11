@@ -10,12 +10,13 @@ import { useToast } from "@/hooks/use-toast";
 import { FileUpload } from "@/components/file-upload";
 import { CropTool } from "@/components/crop-tool";
 import { AspectRatioSelect } from "@/components/aspect-ratio-select";
-import { CustomDimensions } from "@/components/custom-dimensions";
 import { ImagePreview } from "@/components/image-preview";
 import { DownloadOptions } from "@/components/download-options";
-import { canvasToBlob, generateFilename } from "@/lib/utils";
+import { canvasToBlob, generateFilename, stripExtension } from "@/lib/utils";
 import { ASPECT_RATIOS, DEFAULT_ASPECT_RATIO } from "@/lib/constants";
 import { Info } from "lucide-react";
+
+export type AspectRatioKey = keyof typeof ASPECT_RATIOS;
 
 export function ImageEditor() {
   const { toast } = useToast();
@@ -24,8 +25,6 @@ export function ImageEditor() {
   const [crop, setCrop] = useState<PixelCrop | null>(null);
   const [aspect, setAspect] = useState(DEFAULT_ASPECT_RATIO);
   const [loading, setLoading] = useState(false);
-  const [customWidth, setCustomWidth] = useState<number>(0);
-  const [customHeight, setCustomHeight] = useState<number>(0);
   const [activeTab, setActiveTab] = useState<string>("preset");
   const [displayedSize, setDisplayedSize] = useState<{
     width: number;
@@ -46,15 +45,6 @@ export function ImageEditor() {
         naturalHeight: img.naturalHeight,
         src: img.src,
       });
-
-      const aspectRatio = ASPECT_RATIOS[aspect].value;
-      if (img.width / img.height > aspectRatio) {
-        setCustomHeight(Math.round(img.height));
-        setCustomWidth(Math.round(img.height * aspectRatio));
-      } else {
-        setCustomWidth(Math.round(img.width));
-        setCustomHeight(Math.round(img.width / aspectRatio));
-      }
     };
     img.src = objectUrl;
 
@@ -74,26 +64,9 @@ export function ImageEditor() {
     setCrop(null);
   }, []);
 
-  const handleAspectChange = useCallback(
-    (newAspect: string) => {
-      setAspect(newAspect);
-
-      if (crop) {
-        const aspectRatio = ASPECT_RATIOS[newAspect].value;
-        setCustomWidth(Math.round(crop.width));
-        setCustomHeight(Math.round(crop.width / aspectRatio));
-      }
-    },
-    [crop]
-  );
-
-  const handleDimensionsChange = useCallback(
-    (width: number, height: number) => {
-      setCustomWidth(width);
-      setCustomHeight(height);
-    },
-    []
-  );
+  const handleAspectChange = useCallback((newAspect: string) => {
+    setAspect(newAspect);
+  }, []);
 
   const handleCropChange = useCallback(
     (crop: PixelCrop, displayed: { width: number; height: number }) => {
@@ -117,22 +90,22 @@ export function ImageEditor() {
       setLoading(true);
 
       try {
-        // Skala crop-koordinaterna till originalbildens koordinater
-        const scaleX = image.naturalWidth / displayedSize.width;
-        const scaleY = image.naturalHeight / displayedSize.height;
-        const cropX = crop.x * scaleX;
-        const cropY = crop.y * scaleY;
-        const cropWidth = crop.width * scaleX;
-        const cropHeight = crop.height * scaleY;
+        // crop är redan i originalbildens koordinater
+        let outWidth = crop.width;
+        let outHeight = crop.height;
+        // Om preset-format har width/height, använd dem
+        const preset = ASPECT_RATIOS[aspect as AspectRatioKey] as any;
+        if (
+          typeof preset.width === "number" &&
+          typeof preset.height === "number"
+        ) {
+          outWidth = preset.width;
+          outHeight = preset.height;
+        }
 
         const canvas = document.createElement("canvas");
-        if (activeTab === "custom" && customWidth && customHeight) {
-          canvas.width = customWidth;
-          canvas.height = customHeight;
-        } else {
-          canvas.width = Math.round(cropWidth);
-          canvas.height = Math.round(cropHeight);
-        }
+        canvas.width = outWidth;
+        canvas.height = outHeight;
 
         const ctx = canvas.getContext("2d");
         if (!ctx) {
@@ -141,10 +114,10 @@ export function ImageEditor() {
 
         ctx.drawImage(
           image,
-          cropX,
-          cropY,
-          cropWidth,
-          cropHeight,
+          crop.x,
+          crop.y,
+          crop.width,
+          crop.height,
           0,
           0,
           canvas.width,
@@ -156,19 +129,22 @@ export function ImageEditor() {
           options.fileType,
           options.quality / 100
         );
+        const fileExt =
+          options.fileType === "image/jpeg"
+            ? "jpg"
+            : options.fileType === "image/png"
+            ? "png"
+            : "webp";
         const link = document.createElement("a");
-        link.download = options.useOriginalFilename
-          ? uploadedFile?.name ||
-            generateFilename({
-              width: canvas.width,
-              height: canvas.height,
-              fileType: options.fileType === "image/jpeg" ? "jpg" : "png",
-            })
-          : generateFilename({
-              width: canvas.width,
-              height: canvas.height,
-              fileType: options.fileType === "image/jpeg" ? "jpg" : "png",
-            });
+        const originalName = uploadedFile?.name
+          ? stripExtension(uploadedFile.name)
+          : undefined;
+        link.download = generateFilename({
+          width: canvas.width,
+          height: canvas.height,
+          fileType: fileExt,
+          prefix: originalName,
+        });
         link.href = URL.createObjectURL(blob);
         link.click();
         URL.revokeObjectURL(link.href);
@@ -188,16 +164,7 @@ export function ImageEditor() {
         setLoading(false);
       }
     },
-    [
-      image,
-      crop,
-      displayedSize,
-      activeTab,
-      customWidth,
-      customHeight,
-      uploadedFile,
-      toast,
-    ]
+    [image, crop, displayedSize, activeTab, uploadedFile, toast, aspect]
   );
 
   return (
@@ -215,7 +182,7 @@ export function ImageEditor() {
               <CardContent className="p-4 sm:p-6">
                 <CropTool
                   image={image}
-                  aspect={aspect}
+                  aspect={aspect as AspectRatioKey}
                   onCropChange={handleCropChange}
                   className="min-h-[300px] flex items-center justify-center"
                 />
@@ -232,33 +199,11 @@ export function ImageEditor() {
             <Card>
               <CardContent className="p-4 sm:p-6 space-y-4">
                 <div className="space-y-2">
-                  <Tabs
-                    defaultValue="preset"
-                    value={activeTab}
-                    onValueChange={setActiveTab}
-                  >
-                    <TabsList className="grid w-full grid-cols-2">
-                      <TabsTrigger value="preset">
-                        Förinställda format
-                      </TabsTrigger>
-                      <TabsTrigger value="custom">Anpassad storlek</TabsTrigger>
-                    </TabsList>
-                    <TabsContent value="preset" className="space-y-4 pt-4">
-                      <AspectRatioSelect
-                        value={aspect}
-                        onChange={handleAspectChange}
-                        disabled={!image || loading}
-                      />
-                    </TabsContent>
-                    <TabsContent value="custom" className="space-y-4 pt-4">
-                      <CustomDimensions
-                        initialWidth={customWidth}
-                        initialHeight={customHeight}
-                        onDimensionsChange={handleDimensionsChange}
-                        disabled={!image || loading}
-                      />
-                    </TabsContent>
-                  </Tabs>
+                  <AspectRatioSelect
+                    value={aspect}
+                    onChange={handleAspectChange}
+                    disabled={!image || loading}
+                  />
                 </div>
               </CardContent>
             </Card>
@@ -272,19 +217,13 @@ export function ImageEditor() {
               className="pb-4"
             />
 
-            <Separator />
-
             <DownloadOptions
               onDownload={handleDownload}
-              initialType={
-                uploadedFile?.type === "image/png" ? "image/png" : "image/jpeg"
-              }
-              cropWidth={
-                activeTab === "custom" ? customWidth : crop?.width || 0
-              }
-              cropHeight={
-                activeTab === "custom" ? customHeight : crop?.height || 0
-              }
+              initialType={"image/webp"}
+              cropWidth={crop?.width || 0}
+              cropHeight={crop?.height || 0}
+              image={image}
+              crop={crop}
               disabled={!image || !crop || loading}
             />
 

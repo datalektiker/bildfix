@@ -12,10 +12,10 @@ export default function Home() {
           <span className="text-4xl font-bold tracking-tight">Bildfix</span>
         </div>
         <p className="text-muted-foreground text-center mt-2 max-w-2xl">
-          Ändra storlek och beskär dina bilder för sociala medier och webben
+          Ändra storlek och beskär dina bilder för Falnet och webben
         </p>
       </header>
-      <main className="flex-1 container mx-auto px-4 py-6 md:py-10 max-w-7xl">
+      <main className="container mx-auto px-4 py-4">
         <ImageEditor />
       </main>
     </div>

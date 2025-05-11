@@ -1,16 +1,28 @@
 export const ASPECT_RATIOS = {
-  "16:9": { label: "16:9 - Liggande (1920×1080)", value: 16 / 9 },
-  "4:3": { label: "4:3 - Standard (1600×1200)", value: 4 / 3 },
-  "3:2": { label: "3:2 - Foto (1200×800)", value: 3 / 2 },
-  "1:1": { label: "1:1 - Kvadrat (1080×1080)", value: 1 },
-  "2:3": { label: "2:3 - Stående (800×1200)", value: 2 / 3 },
-  "9:16": { label: "9:16 - Story (1080×1920)", value: 9 / 16 },
-  "facebook": { label: "Facebook Omslagsbild (1200×630)", value: 1200 / 630 },
-  "twitter": { label: "Twitter Header (1500×500)", value: 1500 / 500 },
-  "linkedin": { label: "LinkedIn Banner (1584×396)", value: 1584 / 396 },
-  "youtube": { label: "YouTube Miniatyr (1280×720)", value: 1280 / 720 },
-  "custom": { label: "Anpassad", value: 1 },
-  "circle": { label: "Cirkel", value: 1 },
+  "Falnet - bild till nyhet": {
+    label: "Falnet - bild till nyhet (970x400)",
+    value: 970 / 400,
+    width: 970,
+    height: 400,
+  },
+  "Falnet - bild på sida": {
+    label: "Falnet - bild på sida (970x580)",
+    value: 970 / 580,
+    width: 970,
+    height: 580,
+  },
+  "Falkoping.se utfallande nyhetsbild": {
+    label: "Falkoping.se utfallande nyhetsbild (970x400)",
+    value: 970 / 400,
+    width: 970,
+    height: 400,
+  },
+  "Falkoping.se bild på sida": {
+    label: "Falkoping.se bild på sida (670x400)",
+    value: 670 / 400,
+    width: 670,
+    height: 400,
+  },
 };
 
-export const DEFAULT_ASPECT_RATIO = "16:9";
+export const DEFAULT_ASPECT_RATIO = "Falnet - bild till nyhet";

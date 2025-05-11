@@ -10,38 +10,51 @@ import ReactCrop, {
 import "react-image-crop/dist/ReactCrop.css";
 import { cn } from "@/lib/utils";
 import { ASPECT_RATIOS } from "@/lib/constants";
+import type { AspectRatioKey } from "./image-editor";
 
 interface CropToolProps {
   image: HTMLImageElement | null;
-  aspect: string;
+  aspect?: AspectRatioKey;
   onCropChange: (
     crop: PixelCrop,
     displayedSize: { width: number; height: number }
   ) => void;
   cropConfig?: Partial<Crop>;
   className?: string;
+  initialCropWidth?: number;
+  initialCropHeight?: number;
 }
 
 function centerAspectCrop(
   mediaWidth: number,
   mediaHeight: number,
-  aspect: number
+  aspect?: number,
+  preferredWidth?: number,
+  preferredHeight?: number
 ): Crop {
+  // Om preferredWidth/preferredHeight finns och aspect är undefined, prioritera dem och ignorera aspect
+  if (!aspect && preferredWidth && preferredHeight) {
+    let width = Math.min(preferredWidth, mediaWidth);
+    let height = Math.min(preferredHeight, mediaHeight);
+    width = Math.max(1, width);
+    height = Math.max(1, height);
+    return {
+      unit: "px",
+      x: Math.round((mediaWidth - width) / 2),
+      y: Math.round((mediaHeight - height) / 2),
+      width,
+      height,
+    };
+  }
+  // Annars, använd aspect
   let width = mediaWidth;
-  let height = Math.round(width / aspect);
-
-  // Säkerställ att vi inte överskrider bildens höjd
-  if (height > mediaHeight) {
+  let height = aspect ? Math.round(width / aspect) : mediaHeight;
+  if (aspect && height > mediaHeight) {
     height = mediaHeight;
     width = Math.round(height * aspect);
   }
-
-  // Säkerställ att vi inte får för små värden
-  if (width < 50 || height < 50) {
-    width = Math.max(50, width);
-    height = Math.max(50, height);
-  }
-
+  width = Math.max(1, width);
+  height = Math.max(1, height);
   return {
     unit: "px",
     x: Math.round((mediaWidth - width) / 2),
@@ -57,28 +70,41 @@ export function CropTool({
   onCropChange,
   cropConfig = {},
   className,
+  initialCropWidth,
+  initialCropHeight,
 }: CropToolProps) {
   const [crop, setCrop] = useState<Crop>();
   const [completedCrop, setCompletedCrop] = useState<PixelCrop>();
   const imgRef = useRef<HTMLImageElement | null>(null);
 
-  // When the aspect ratio changes, update the crop
+  // Initiera crop endast när bild eller initialCropWidth/Height ändras (inte varje gång aspect ändras)
   useEffect(() => {
-    if (imgRef.current && aspect) {
+    if (imgRef.current) {
       const { width, height } = imgRef.current;
-      const aspectValue =
-        ASPECT_RATIOS[aspect as keyof typeof ASPECT_RATIOS]?.value || 1;
-      const newCrop = centerAspectCrop(width, height, aspectValue);
-      console.log("CropTool: Ny crop vid aspect-ändring", {
+      let aspectValue = 1;
+      if (aspect) {
+        aspectValue =
+          ASPECT_RATIOS[aspect as keyof typeof ASPECT_RATIOS]?.value || 1;
+      }
+      const newCrop = centerAspectCrop(
         width,
         height,
-        aspectValue,
+        aspect ? aspectValue : undefined,
+        initialCropWidth,
+        initialCropHeight
+      );
+      console.log("CropTool: Ny crop vid aspect- eller måttändring", {
+        width,
+        height,
+        aspectValue: aspect ? aspectValue : undefined,
+        initialCropWidth,
+        initialCropHeight,
         newCrop,
       });
       setCrop(newCrop);
       setCompletedCrop(newCrop);
     }
-  }, [aspect, image]);
+  }, [image, initialCropWidth, initialCropHeight]);
 
   useEffect(() => {
     if (completedCrop && imgRef.current && image) {
@@ -117,14 +143,14 @@ export function CropTool({
   if (!image) return null;
 
   return (
-    <div className={cn("relative overflow-auto", className)}>
+    <div className={cn("relative overflow-hidden", className)}>
       <ReactCrop
         crop={crop}
         onChange={(_, percentCrop) => setCrop(percentCrop)}
         onComplete={(c) => setCompletedCrop(c)}
-        aspect={ASPECT_RATIOS[aspect]?.value}
-        minWidth={50}
-        minHeight={50}
+        aspect={aspect ? ASPECT_RATIOS[aspect]?.value : undefined}
+        minWidth={1}
+        minHeight={1}
         circularCrop={aspect === "circle"}
         {...cropConfig}
       >
@@ -137,12 +163,17 @@ export function CropTool({
           onLoad={(e) => {
             const target = e.currentTarget;
             imgRef.current = target;
-            const aspectValue =
-              ASPECT_RATIOS[aspect as keyof typeof ASPECT_RATIOS]?.value || 1;
+            let aspectValue = 1;
+            if (aspect) {
+              aspectValue =
+                ASPECT_RATIOS[aspect as keyof typeof ASPECT_RATIOS]?.value || 1;
+            }
             const initialCrop = centerAspectCrop(
               target.width,
               target.height,
-              aspectValue
+              aspect ? aspectValue : undefined,
+              initialCropWidth,
+              initialCropHeight
             );
             setCrop(initialCrop);
             setCompletedCrop(initialCrop);

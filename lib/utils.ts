@@ -1,6 +1,6 @@
-import { clsx, type ClassValue } from 'clsx';
-import { twMerge } from 'tailwind-merge';
-import { format } from 'date-fns';
+import { clsx, type ClassValue } from "clsx";
+import { twMerge } from "tailwind-merge";
+import { format } from "date-fns";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -8,14 +8,14 @@ export function cn(...inputs: ClassValue[]) {
 
 export function canvasToBlob(
   canvas: HTMLCanvasElement,
-  type: string = 'image/jpeg',
+  type: string = "image/jpeg",
   quality: number = 0.9
 ): Promise<Blob> {
   return new Promise((resolve, reject) => {
     canvas.toBlob(
       (blob) => {
         if (!blob) {
-          reject(new Error('Canvas to Blob conversion failed'));
+          reject(new Error("Canvas to Blob conversion failed"));
           return;
         }
         resolve(blob);
@@ -33,13 +33,17 @@ interface FilenameOptions {
   prefix?: string;
 }
 
+export function stripExtension(filename: string): string {
+  return filename.replace(/\.[^/.]+$/, "");
+}
+
 export function generateFilename({
   width,
   height,
   fileType,
-  prefix = 'image',
+  prefix = "image",
 }: FilenameOptions): string {
-  const date = format(new Date(), 'yyyyMMdd');
-  const time = format(new Date(), 'HHmmss');
+  const date = format(new Date(), "yyyyMMdd");
+  const time = format(new Date(), "HHmmss");
   return `${prefix}_${width}x${height}_${date}_${time}.${fileType}`;
 }
