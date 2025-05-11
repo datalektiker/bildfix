@@ -44,7 +44,6 @@ export function DownloadOptions({
     "image/jpeg" | "image/png" | "image/webp"
   >(initialType);
   const [quality, setQuality] = useState<number>(90);
-  const [estimatedSize, setEstimatedSize] = useState<string>("");
 
   const previewFilename = generateFilename({
     width: cropWidth,
@@ -56,46 +55,6 @@ export function DownloadOptions({
         ? "png"
         : "webp",
   });
-
-  useEffect(() => {
-    if (!image || !crop || cropWidth < 1 || cropHeight < 1) {
-      setEstimatedSize("");
-      return;
-    }
-    const canvas = document.createElement("canvas");
-    canvas.width = cropWidth;
-    canvas.height = cropHeight;
-    const ctx = canvas.getContext("2d");
-    if (!ctx) return;
-    ctx.drawImage(
-      image,
-      crop.x,
-      crop.y,
-      crop.width,
-      crop.height,
-      0,
-      0,
-      cropWidth,
-      cropHeight
-    );
-    canvas.toBlob(
-      (blob) => {
-        if (blob) {
-          const sizeKB = blob.size / 1024;
-          const sizeMB = sizeKB / 1024;
-          setEstimatedSize(
-            sizeMB >= 1 ? `${sizeMB.toFixed(2)} MB` : `${Math.round(sizeKB)} kB`
-          );
-        } else {
-          setEstimatedSize("");
-        }
-      },
-      fileType,
-      fileType === "image/jpeg" || fileType === "image/webp"
-        ? quality / 100
-        : undefined
-    );
-  }, [image, crop, cropWidth, cropHeight, fileType, quality]);
 
   return (
     <div className="space-y-6">
@@ -133,17 +92,6 @@ export function DownloadOptions({
             onValueChange={(values) => setQuality(values[0])}
             disabled={disabled}
           />
-          {estimatedSize && (
-            <div className="text-xs text-muted-foreground pt-1 text-right">
-              Uppskattad filstorlek: {estimatedSize}
-            </div>
-          )}
-        </div>
-      )}
-
-      {fileType === "image/png" && estimatedSize && (
-        <div className="text-xs text-muted-foreground pt-1 text-right">
-          Uppskattad filstorlek: {estimatedSize}
         </div>
       )}
 
