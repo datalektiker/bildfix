@@ -102,7 +102,7 @@ export function CropTool({
         newCrop,
       });
       setCrop(newCrop);
-      setCompletedCrop({ ...newCrop, unit: "px" });
+      setCompletedCrop({ ...newCrop, unit: "px" as const });
     }
   }, [image, initialCropWidth, initialCropHeight]);
 
@@ -123,7 +123,7 @@ export function CropTool({
         y: Math.round(completedCrop.y * scaleY),
         width: Math.round(completedCrop.width * scaleX),
         height: Math.round(completedCrop.height * scaleY),
-        unit: "px",
+        unit: "px" as const,
       };
 
       console.log("CropTool: Skickar SKALADE crop till parent", {
@@ -176,7 +176,7 @@ export function CropTool({
               initialCropHeight
             );
             setCrop(initialCrop);
-            setCompletedCrop({ ...initialCrop, unit: "px" });
+            setCompletedCrop({ ...initialCrop, unit: "px" as const });
           }}
         />
       </ReactCrop>
