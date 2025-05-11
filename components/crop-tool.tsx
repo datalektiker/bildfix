@@ -151,7 +151,7 @@ export function CropTool({
         aspect={aspect ? ASPECT_RATIOS[aspect]?.value : undefined}
         minWidth={1}
         minHeight={1}
-        circularCrop={aspect === "circle"}
+        circularCrop={false}
         {...cropConfig}
       >
         <img
