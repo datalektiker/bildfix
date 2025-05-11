@@ -14,7 +14,7 @@ import { ImagePreview } from "@/components/image-preview";
 import { DownloadOptions } from "@/components/download-options";
 import { canvasToBlob, generateFilename, stripExtension } from "@/lib/utils";
 import { ASPECT_RATIOS, DEFAULT_ASPECT_RATIO } from "@/lib/constants";
-import { Info } from "lucide-react";
+import { Info, AlertTriangle } from "lucide-react";
 
 export type AspectRatioKey = keyof typeof ASPECT_RATIOS;
 
@@ -189,12 +189,35 @@ export function ImageEditor() {
               </CardContent>
             </Card>
 
-            <Alert variant="default" className="bg-primary/5 border-primary/20">
-              <Info className="h-4 w-4" />
-              <AlertDescription>
-                Dra för att flytta. Ändra storlek från hörn och kanter.
-              </AlertDescription>
-            </Alert>
+            {image && aspect && (
+              <>
+                <Alert variant="default" className="bg-primary/5 border-primary/20">
+                  <Info className="h-4 w-4" />
+                  <AlertDescription>
+                    Dra för att flytta. Ändra storlek från hörn och kanter.
+                  </AlertDescription>
+                </Alert>
+
+                {(() => {
+                  const preset = ASPECT_RATIOS[aspect as AspectRatioKey];
+                  if (preset.width && preset.height) {
+                    const isTooSmall = image.naturalWidth < preset.width || image.naturalHeight < preset.height;
+                    if (isTooSmall) {
+                      return (
+                        <Alert variant="destructive">
+                          <AlertTriangle className="h-4 w-4" />
+                          <AlertDescription>
+                            Varning: Din bild ({image.naturalWidth}×{image.naturalHeight}px) är mindre än det rekommenderade formatet ({preset.width}×{preset.height}px). 
+                            Bilden kommer att skalas upp vilket kan påverka kvaliteten.
+                          </AlertDescription>
+                        </Alert>
+                      );
+                    }
+                  }
+                  return null;
+                })()}
+              </>
+            )}
 
             <Card>
               <CardContent className="p-4 sm:p-6 space-y-4">
