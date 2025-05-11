@@ -6,12 +6,12 @@ import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
 import { Switch } from "@/components/ui/switch";
 import { Download } from "lucide-react";
-import { 
-  Select, 
-  SelectContent, 
-  SelectItem, 
-  SelectTrigger, 
-  SelectValue 
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
 } from "@/components/ui/select";
 import { generateFilename } from "@/lib/utils";
 
@@ -36,10 +36,11 @@ export function DownloadOptions({
   cropHeight,
   disabled = false,
 }: DownloadOptionsProps) {
-  const [fileType, setFileType] = useState<"image/jpeg" | "image/png">(initialType);
+  const [fileType, setFileType] = useState<"image/jpeg" | "image/png">(
+    initialType
+  );
   const [quality, setQuality] = useState<number>(90);
-  const [useOriginalFilename, setUseOriginalFilename] = useState<boolean>(false);
-  
+
   const previewFilename = generateFilename({
     width: cropWidth,
     height: cropHeight,
@@ -52,7 +53,9 @@ export function DownloadOptions({
         <Label htmlFor="file-type">Filformat</Label>
         <Select
           value={fileType}
-          onValueChange={(value) => setFileType(value as "image/jpeg" | "image/png")}
+          onValueChange={(value) =>
+            setFileType(value as "image/jpeg" | "image/png")
+          }
           disabled={disabled}
         >
           <SelectTrigger id="file-type" className="w-full">
@@ -82,26 +85,11 @@ export function DownloadOptions({
         </div>
       )}
 
-      <div className="flex items-center justify-between">
-        <Label htmlFor="original-filename">Använd ursprungligt filnamn</Label>
-        <Switch
-          id="original-filename"
-          checked={useOriginalFilename}
-          onCheckedChange={setUseOriginalFilename}
-          disabled={disabled}
-        />
-      </div>
-
-      <div className="space-y-2">
-        <Label>Utdatafilnamn</Label>
-        <div className="p-2 bg-muted/50 border rounded text-sm font-mono truncate">
-          {useOriginalFilename ? "ursprungligt-filnamn" : previewFilename}
-        </div>
-      </div>
-
-      <Button 
-        className="w-full" 
-        onClick={() => onDownload({ fileType, quality, useOriginalFilename })}
+      <Button
+        className="w-full"
+        onClick={() =>
+          onDownload({ fileType, quality, useOriginalFilename: false })
+        }
         disabled={disabled}
       >
         <Download className="mr-2 h-4 w-4" />

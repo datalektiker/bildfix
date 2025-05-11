@@ -27,19 +27,28 @@ function centerAspectCrop(
   mediaHeight: number,
   aspect: number
 ): Crop {
-  return centerCrop(
-    makeAspectCrop(
-      {
-        unit: "%",
-        width: 90,
-      },
-      aspect,
-      mediaWidth,
-      mediaHeight
-    ),
-    mediaWidth,
-    mediaHeight
-  );
+  let width = mediaWidth;
+  let height = Math.round(width / aspect);
+
+  // Säkerställ att vi inte överskrider bildens höjd
+  if (height > mediaHeight) {
+    height = mediaHeight;
+    width = Math.round(height * aspect);
+  }
+
+  // Säkerställ att vi inte får för små värden
+  if (width < 50 || height < 50) {
+    width = Math.max(50, width);
+    height = Math.max(50, height);
+  }
+
+  return {
+    unit: "px",
+    x: Math.round((mediaWidth - width) / 2),
+    y: Math.round((mediaHeight - height) / 2),
+    width,
+    height,
+  };
 }
 
 export function CropTool({
@@ -57,28 +66,53 @@ export function CropTool({
   useEffect(() => {
     if (imgRef.current && aspect) {
       const { width, height } = imgRef.current;
-      const aspectValue = ASPECT_RATIOS[aspect]?.value || 1;
+      const aspectValue =
+        ASPECT_RATIOS[aspect as keyof typeof ASPECT_RATIOS]?.value || 1;
       const newCrop = centerAspectCrop(width, height, aspectValue);
-      setCrop(newCrop);
-      setCompletedCrop({
-        ...newCrop,
-        x: Math.round((newCrop.x * width) / 100),
-        y: Math.round((newCrop.y * height) / 100),
-        width: Math.round((newCrop.width * width) / 100),
-        height: Math.round((newCrop.height * height) / 100),
-        unit: "px",
+      console.log("CropTool: Ny crop vid aspect-ändring", {
+        width,
+        height,
+        aspectValue,
+        newCrop,
       });
+      setCrop(newCrop);
+      setCompletedCrop(newCrop);
     }
   }, [aspect, image]);
 
   useEffect(() => {
-    if (completedCrop && imgRef.current) {
-      onCropChange(completedCrop, {
-        width: imgRef.current.width,
-        height: imgRef.current.height,
+    if (completedCrop && imgRef.current && image) {
+      // Skala crop från DOM till originalbild
+      const domWidth = imgRef.current.width;
+      const domHeight = imgRef.current.height;
+      const naturalWidth = image.naturalWidth;
+      const naturalHeight = image.naturalHeight;
+
+      const scaleX = naturalWidth / domWidth;
+      const scaleY = naturalHeight / domHeight;
+
+      const scaledCrop = {
+        ...completedCrop,
+        x: Math.round(completedCrop.x * scaleX),
+        y: Math.round(completedCrop.y * scaleY),
+        width: Math.round(completedCrop.width * scaleX),
+        height: Math.round(completedCrop.height * scaleY),
+        unit: "px",
+      };
+
+      console.log("CropTool: Skickar SKALADE crop till parent", {
+        completedCrop,
+        scaledCrop,
+        domSize: { domWidth, domHeight },
+        naturalSize: { naturalWidth, naturalHeight },
+      });
+
+      onCropChange(scaledCrop, {
+        width: naturalWidth,
+        height: naturalHeight,
       });
     }
-  }, [completedCrop, onCropChange]);
+  }, [completedCrop, onCropChange, image]);
 
   if (!image) return null;
 
@@ -103,23 +137,15 @@ export function CropTool({
           onLoad={(e) => {
             const target = e.currentTarget;
             imgRef.current = target;
-
-            // Set initial crop immediately after image loads
-            const aspectValue = ASPECT_RATIOS[aspect]?.value || 1;
+            const aspectValue =
+              ASPECT_RATIOS[aspect as keyof typeof ASPECT_RATIOS]?.value || 1;
             const initialCrop = centerAspectCrop(
               target.width,
               target.height,
               aspectValue
             );
             setCrop(initialCrop);
-            setCompletedCrop({
-              ...initialCrop,
-              x: Math.round((initialCrop.x * target.width) / 100),
-              y: Math.round((initialCrop.y * target.height) / 100),
-              width: Math.round((initialCrop.width * target.width) / 100),
-              height: Math.round((initialCrop.height * target.height) / 100),
-              unit: "px",
-            });
+            setCompletedCrop(initialCrop);
           }}
         />
       </ReactCrop>

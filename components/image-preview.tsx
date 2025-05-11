@@ -42,27 +42,25 @@ export function ImagePreview({
       return;
     }
 
-    // Skala crop-koordinaterna till originalbildens koordinater
-    const scaleX = image.naturalWidth / displayedSize.width;
-    const scaleY = image.naturalHeight / displayedSize.height;
-    const cropX = crop.x * scaleX;
-    const cropY = crop.y * scaleY;
-    const cropWidth = crop.width * scaleX;
-    const cropHeight = crop.height * scaleY;
+    // Använd crop-koordinaterna direkt från originalbilden
+    const cropX = crop.x;
+    const cropY = crop.y;
+    const cropWidth = crop.width;
+    const cropHeight = crop.height;
 
     // Beräkna förhandsvisningens storlek (max 300x300 px, bibehåll förhållande)
     const maxPreviewSize = 300;
-    let previewWidth = crop.width;
-    let previewHeight = crop.height;
-    if (crop.width > crop.height) {
-      if (crop.width > maxPreviewSize) {
+    let previewWidth = cropWidth;
+    let previewHeight = cropHeight;
+    if (cropWidth > cropHeight) {
+      if (cropWidth > maxPreviewSize) {
         previewWidth = maxPreviewSize;
-        previewHeight = Math.round((crop.height / crop.width) * maxPreviewSize);
+        previewHeight = Math.round((cropHeight / cropWidth) * maxPreviewSize);
       }
     } else {
-      if (crop.height > maxPreviewSize) {
+      if (cropHeight > maxPreviewSize) {
         previewHeight = maxPreviewSize;
-        previewWidth = Math.round((crop.width / crop.height) * maxPreviewSize);
+        previewWidth = Math.round((cropWidth / cropHeight) * maxPreviewSize);
       }
     }
 
@@ -107,10 +105,6 @@ export function ImagePreview({
           />
         </CardContent>
       </Card>
-
-      <div className="mt-2 text-xs text-muted-foreground text-center">
-        {crop.width} × {crop.height} pixlar
-      </div>
     </div>
   );
 }
