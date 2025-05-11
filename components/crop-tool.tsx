@@ -102,7 +102,7 @@ export function CropTool({
         newCrop,
       });
       setCrop(newCrop);
-      setCompletedCrop(newCrop);
+      setCompletedCrop({ ...newCrop, unit: "px" });
     }
   }, [image, initialCropWidth, initialCropHeight]);
 
@@ -176,7 +176,7 @@ export function CropTool({
               initialCropHeight
             );
             setCrop(initialCrop);
-            setCompletedCrop(initialCrop);
+            setCompletedCrop({ ...initialCrop, unit: "px" });
           }}
         />
       </ReactCrop>
