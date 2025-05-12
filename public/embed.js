@@ -1,21 +1,13 @@
 (function () {
-  // Hämta skript-URL:en för att avgöra varifrån applikationen körs
-  const scriptElement = document.currentScript;
-  const scriptUrl = scriptElement ? scriptElement.src : "";
-
-  // Extrahera basdomänen från skriptets URL
-  const urlObj = new URL(scriptUrl);
-  const baseUrl = urlObj.origin;
-
-  // Skapa iframe med förbättrad hantering av höjd
+  // Skapa iframe
   const iframe = document.createElement("iframe");
-  iframe.src = baseUrl + "/";
+  iframe.src = "https://bildfix.draj.se/";
   iframe.style.width = "100%";
   iframe.style.border = "none";
   iframe.style.overflow = "hidden";
   iframe.id = "bildfix-iframe";
   iframe.setAttribute("title", "Bildfix - beskär bilder");
-  iframe.setAttribute("scrolling", "no"); // Förhindra scrollning i iframen
+  iframe.setAttribute("scrolling", "no");
 
   // Standardhöjd – ändras dynamiskt
   iframe.style.height = "800px";
@@ -30,10 +22,9 @@
   let lastKnownHeight = 0;
   let resizeTimeout = null;
 
-  // Förbättrad lyssning på höjdändring via postMessage
+  // Lyssna på höjdändring via postMessage
   window.addEventListener("message", (event) => {
-    // Kontrollera endast att meddelandet kommer från samma domän som iframen
-    if (new URL(event.origin).origin !== baseUrl) return;
+    if (event.origin !== "https://bildfix.draj.se") return;
 
     if (event.data.type === "resize-iframe") {
       const iframe = document.getElementById("bildfix-iframe");
