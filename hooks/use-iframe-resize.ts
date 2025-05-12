@@ -13,12 +13,32 @@ export function useIframeResize() {
     // Skicka höjd vid montering
     sendHeight();
 
-    // Och vid varje resize-händelse
+    // Uppdatera höjden regelbundet under de första sekunderna efter laddning
+    const initialInterval = setInterval(sendHeight, 100);
+    setTimeout(() => clearInterval(initialInterval), 2000);
+
+    // Lyssna på olika händelser som kan påverka höjden
     window.addEventListener("resize", sendHeight);
+    window.addEventListener("load", sendHeight);
+
+    // Använd MutationObserver för att upptäcka DOM-ändringar
+    const observer = new MutationObserver(() => {
+      sendHeight();
+    });
+
+    // Starta observation av hela dokumentet för att fånga alla ändringar
+    observer.observe(document.body, {
+      childList: true,
+      subtree: true,
+      attributes: true,
+    });
 
     // Städa upp vid avmontering
     return () => {
       window.removeEventListener("resize", sendHeight);
+      window.removeEventListener("load", sendHeight);
+      observer.disconnect();
+      clearInterval(initialInterval);
     };
   }, []);
 }
