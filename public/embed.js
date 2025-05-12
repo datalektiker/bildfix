@@ -18,23 +18,30 @@
     (container || document.body).appendChild(iframe);
   });
 
+  // Spåra tidigare höjd för att undvika looping
+  let lastKnownHeight = 0;
+  let resizeTimeout = null;
+
   // Förbättrad lyssning på höjdändring via postMessage
   window.addEventListener("message", (event) => {
     if (event.origin !== "https://bildfix.draj.se") return;
     if (event.data.type === "resize-iframe") {
       const iframe = document.getElementById("bildfix-iframe");
       if (iframe) {
-        // Lägg till en liten marginal för säkerhets skull
-        const newHeight = event.data.height + 5;
-        iframe.style.height = newHeight + "px";
-
-        // Verifiera att höjden verkligen ändrades
-        setTimeout(() => {
-          const currentHeight = parseInt(iframe.style.height);
-          if (currentHeight < event.data.height) {
-            iframe.style.height = event.data.height + 10 + "px";
-          }
-        }, 100);
+        // Kontrollera att höjden är rimlig och ändras signifikant
+        const newHeight = event.data.height;
+        if (
+          newHeight > 100 &&
+          newHeight < 10000 &&
+          Math.abs(lastKnownHeight - newHeight) > 5
+        ) {
+          // Använd debouncing för att undvika för många uppdateringar
+          clearTimeout(resizeTimeout);
+          resizeTimeout = setTimeout(() => {
+            iframe.style.height = newHeight + "px";
+            lastKnownHeight = newHeight;
+          }, 100);
+        }
       }
     }
   });

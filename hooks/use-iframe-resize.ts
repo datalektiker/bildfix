@@ -5,40 +5,58 @@ import { useEffect } from "react";
  */
 export function useIframeResize() {
   useEffect(() => {
+    let lastHeight = 0;
+    let resizeTimeout: NodeJS.Timeout | null = null;
+    let observerActive = false;
+
     const sendHeight = () => {
-      const height = document.documentElement.scrollHeight;
-      window.parent.postMessage({ type: "resize-iframe", height }, "*");
+      if (observerActive) {
+        const height = document.documentElement.scrollHeight;
+
+        // Endast skicka uppdatering om höjden faktiskt ändrats
+        if (Math.abs(height - lastHeight) > 5) {
+          lastHeight = height;
+          window.parent.postMessage({ type: "resize-iframe", height }, "*");
+        }
+      }
     };
 
-    // Skicka höjd vid montering
-    sendHeight();
+    // Skicka höjd efter en kort fördröjning, begränsat genom debouncing
+    const debouncedSendHeight = () => {
+      if (resizeTimeout) {
+        clearTimeout(resizeTimeout);
+      }
+      resizeTimeout = setTimeout(sendHeight, 200);
+    };
 
-    // Uppdatera höjden regelbundet under de första sekunderna efter laddning
-    const initialInterval = setInterval(sendHeight, 100);
-    setTimeout(() => clearInterval(initialInterval), 2000);
-
-    // Lyssna på olika händelser som kan påverka höjden
-    window.addEventListener("resize", sendHeight);
-    window.addEventListener("load", sendHeight);
-
-    // Använd MutationObserver för att upptäcka DOM-ändringar
-    const observer = new MutationObserver(() => {
+    // Aktivera observer först efter initial rendering
+    setTimeout(() => {
+      observerActive = true;
       sendHeight();
-    });
 
-    // Starta observation av hela dokumentet för att fånga alla ändringar
-    observer.observe(document.body, {
-      childList: true,
-      subtree: true,
-      attributes: true,
-    });
+      // Lyssna på fönsterresizing
+      window.addEventListener("resize", debouncedSendHeight);
 
-    // Städa upp vid avmontering
-    return () => {
-      window.removeEventListener("resize", sendHeight);
-      window.removeEventListener("load", sendHeight);
-      observer.disconnect();
-      clearInterval(initialInterval);
-    };
+      // Använd MutationObserver med debouncing för att inte uppdatera för ofta
+      const observer = new MutationObserver(debouncedSendHeight);
+
+      // Observera endast viktiga ändringar som påverkar layout
+      observer.observe(document.body, {
+        childList: true,
+        subtree: true,
+        attributes: true,
+        attributeFilter: ["style", "class", "src"],
+      });
+
+      // Städa upp vid avmontering
+      return () => {
+        observerActive = false;
+        window.removeEventListener("resize", debouncedSendHeight);
+        observer.disconnect();
+        if (resizeTimeout) {
+          clearTimeout(resizeTimeout);
+        }
+      };
+    }, 500);
   }, []);
 }
