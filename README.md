@@ -2,7 +2,7 @@
 
 Bildfix är ett webbaserat verktyg för att enkelt beskära och ändra storlek på bilder för användning på Falnet och falkoping.se. Verktyget är byggt med Next.js och kör helt på klientsidan utan behov av server.
 
-![Bildfix screenshot](https://din-hosting-url.com/bildfix-screenshot.png)
+![Bildfix screenshot](docs/images/bildfix.png)
 
 ## Funktioner
 
