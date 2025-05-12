@@ -31,7 +31,7 @@ Bildfix är ett webbaserat verktyg för att enkelt beskära och ändra storlek p
 1. Klona repot
 
    ```bash
-   git clone https://github.com/din-organisation/bildfix.git
+   git clone https://github.com/datalektiker/bildfix.git
    cd bildfix
    ```
 
