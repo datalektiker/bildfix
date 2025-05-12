@@ -2,8 +2,12 @@
 
 import { ImageEditor } from "@/components/image-editor";
 import { Image as ImageIcon } from "lucide-react";
+import { useIframeResize } from "@/hooks/use-iframe-resize";
 
 export default function Home() {
+  // Anropa useIframeResize-hooken för att hantera iframe-höjdändringar
+  useIframeResize();
+
   return (
     <div className="flex min-h-screen flex-col">
       <header className="flex flex-col items-center justify-center py-8">
