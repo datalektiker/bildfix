@@ -1,7 +1,15 @@
 (function () {
+  // Hämta skript-URL:en för att avgöra varifrån applikationen körs
+  const scriptElement = document.currentScript;
+  const scriptUrl = scriptElement ? scriptElement.src : "";
+
+  // Extrahera basdomänen från skriptets URL
+  const urlObj = new URL(scriptUrl);
+  const baseUrl = urlObj.origin;
+
   // Skapa iframe med förbättrad hantering av höjd
   const iframe = document.createElement("iframe");
-  iframe.src = "https://bildfix.draj.se/";
+  iframe.src = baseUrl + "/";
   iframe.style.width = "100%";
   iframe.style.border = "none";
   iframe.style.overflow = "hidden";
@@ -24,7 +32,9 @@
 
   // Förbättrad lyssning på höjdändring via postMessage
   window.addEventListener("message", (event) => {
-    if (event.origin !== "https://bildfix.draj.se") return;
+    // Kontrollera endast att meddelandet kommer från samma domän som iframen
+    if (new URL(event.origin).origin !== baseUrl) return;
+
     if (event.data.type === "resize-iframe") {
       const iframe = document.getElementById("bildfix-iframe");
       if (iframe) {
