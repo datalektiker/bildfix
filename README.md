@@ -1,6 +1,6 @@
 # Bildfix
 
-Bildfix är ett webbaserat verktyg för att enkelt beskära och ändra storlek på bilder för användning på webb. Verktyget byggdes för användning på två specifika webbar med formatmallar för dem men som enkelt kan bytas ut till andra användningsområden. Verktyget är byggt med Next.js och kör helt på klientsidan utan behov av server.
+Bildfix är ett webbaserat verktyg för att enkelt beskära och ändra storlek på bilder för användning på webb. Verktyget är byggt med Next.js och kör helt på klientsidan utan behov av server.
 
 ![Bildfix screenshot](docs/images/bildfix.png)
 
