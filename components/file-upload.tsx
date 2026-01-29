@@ -26,14 +26,39 @@ export function FileUpload({
   const onDrop = useCallback(
     async (acceptedFiles: File[]) => {
       if (acceptedFiles.length === 0) return;
-      const file = acceptedFiles[0];
+      let file = acceptedFiles[0];
       setUploading(true);
       try {
-        // Använd filen direkt lokalt
+        // Konvertera HEIC/HEIF till JPEG
+        const isHeic = file.type === "image/heic" ||
+                       file.type === "image/heif" ||
+                       file.name.toLowerCase().endsWith(".heic") ||
+                       file.name.toLowerCase().endsWith(".heif");
+
+        if (isHeic) {
+          toast({
+            title: "Konverterar HEIC...",
+            description: "Vänta medan bilden konverteras",
+          });
+
+          const heic2any = (await import("heic2any")).default;
+          const convertedBlob = await heic2any({
+            blob: file,
+            toType: "image/jpeg",
+            quality: 0.92,
+          });
+
+          const blob = Array.isArray(convertedBlob) ? convertedBlob[0] : convertedBlob;
+          const newFileName = file.name.replace(/\.heic$/i, ".jpg").replace(/\.heif$/i, ".jpg");
+          file = new File([blob], newFileName, { type: "image/jpeg" });
+        }
+
         onFileSelect(file);
         toast({
           title: "Bild vald",
-          description: "Bilden är nu redo för redigering",
+          description: isHeic
+            ? "HEIC-bilden konverterades och är redo för redigering"
+            : "Bilden är nu redo för redigering",
         });
       } catch (error) {
         console.error("Fel vid filval:", error);
@@ -56,6 +81,8 @@ export function FileUpload({
       "image/jpeg": [],
       "image/png": [],
       "image/webp": [],
+      "image/heic": [".heic"],
+      "image/heif": [".heif"],
     },
     maxFiles: 1,
     disabled: isLoading || uploading,
@@ -90,7 +117,7 @@ export function FileUpload({
                 {uploading ? "Bearbetar..." : "Dra och släpp din bild här"}
               </p>
               <p className="text-sm text-muted-foreground mt-1">
-                eller klicka för att bläddra (PNG, JPG, WebP)
+                eller klicka för att bläddra (PNG, JPG, WebP, HEIC)
               </p>
             </div>
             <Button
